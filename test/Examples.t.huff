@@ -1,0 +1,43 @@
+#include "../src/HuffTest.huff"
+
+#define test TEST_STACK_EQUALITY() = {
+    `Banana`
+    `Banana`
+    EXPECT_EQ(`Values should match`)
+}
+
+#define test TEST_STACK_EQUALITY_FAIL() = {
+    `Apple`
+    `Banana`
+    EXPECT_EQ(`Values should match`)
+}
+
+#define test TEST_MEMORY_EQUALITY_FAIL() = {
+    `lol wut huh lmao` 0x00 mstore
+    `uhh nah lol rofl` 0x20 mstore
+    EXPECT_MEM_EQ(0x00, 0x20, `Values should match`)
+}
+
+#define test TEST_GREATER_THAN() = {
+    0xf00d
+    0xc0ffee
+    EXPECT_GT(`c0ffee is greater than f00d`)
+}
+
+#define test TEST_STACK_MATCH_DEPTH_5() = {
+    0x1111 0x111111 0x1111 0x1111 0x11
+    0x1111 0x111111 0x1111 0x1111 0x11
+    EXPECT_STACK(0x5, `Stack did not match.`)
+}
+
+#define test TEST_STACK_MATCH_DEPTH_3() = {
+    0x1111 0x111111 0x1111
+    0x1111 0x111111 0x1111
+    EXPECT_STACK(0x3, `Stack did not match.`)
+}
+
+#define test TEST_STACK_MATCH_FAIL() = {
+    0x1111 0x111111 0x1111 0x1111 0x11
+    0xbeef 0xc0ffee 0x1111 0x1dea 0x11
+    EXPECT_STACK(0x5, `Stack did not match.`)
+}

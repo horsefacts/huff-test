@@ -1,0 +1,14 @@
+#include "../src/HuffTest.huff"
+
+// Huffmate ASSERT
+#define test TEST_HUFFMATE_PASS() = {
+    `Banana`
+    `Banana`
+    ASSERT_EQ()
+}
+
+#define test TEST_HUFFMATE_FAIL() = {
+    `Apple`
+    `Banana`
+    ASSERT_EQ()
+}

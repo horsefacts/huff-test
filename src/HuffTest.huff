@@ -1,0 +1,395 @@
+#include "../lib/huffmate/src/utils/Errors.huff"
+
+#define macro _LOG() = takes (1) returns (0) {
+    // Input stack:   [log_item]
+    pc             // [pc, log_item]
+    0x01           // [log_cheatcode, pc, log_item]
+    0x00 mstore    // [pc, log_item]
+    0x20 mstore    // [log_item]
+    0x40 mstore    // []
+    0x00 dup1      // [0x00, 0x00]
+    0x60 dup2      // [0x00, 0x60, 0x00, 0x00]
+    0x00000000000000000000000000000000bEefbabe
+    gas            // [gas, beef_babe, 0x00, 0x60, 0x00, 0x00]
+    staticcall pop // []
+}
+
+#define macro LOG_VAL() = takes (1) returns (0) {
+    // takes: [value]
+    _LOG() // []
+}
+
+#define macro LOG_MSG() = takes (1) {
+    // takes:                  [message]
+    __RIGHTPAD(0x32d5ab96)  // [keccak("Log(bytes32)")[:4], message]
+    0x00 mstore             // [message]
+    0x04 mstore             // []
+    0x00 mload              // [selector + message[:28]]
+    _LOG()                  // []
+}
+
+#define macro _EXPECT_BINARY(error, len, msg) = takes (3) {
+    // takes:            [condition, a, b]
+    pass
+    jumpi             // [a, b]
+
+    <msg> LOG_MSG()
+
+    `Left:` LOG_MSG()
+    LOG_VAL()         // [b]
+
+    `Right:` LOG_MSG()
+    LOG_VAL()         // []
+
+    <error> <len> false REQUIRE()
+    pass:
+      pop            // [b]
+      pop            // [a]
+}
+
+#define macro _EXPECT_EQ(error, len, msg) = takes (2) {
+    // takes: [a, b]
+    dup2   // [b, a, b]
+    dup2   // [a, b, a, b]
+    eq     // [a == b, a, b]
+    _EXPECT_BINARY(<error>, <len>, <msg>)
+}
+
+#define macro _EXPECT_NOT_EQ(error, len, msg) = takes (2) {
+    // takes: [a, b]
+    dup2   // [b, a, b]
+    dup2   // [a, b, a, b]
+    eq     // [a == b, a, b]
+    iszero // [a != b, a, b]
+    _EXPECT_BINARY(<error>, <len>, <msg>)
+}
+
+#define macro _EXPECT_STACK3(msg) = takes (6) {
+    // takes:          [a, b, c, a1, b1, c1]
+    dup6 dup4 eq //    [c1 == c, a, b, c, a1, b1, c1]
+    dup6 dup4 eq //    [b1 == b, c1 == c, a, b, c, a1, b1, c1]
+    dup6 dup4 eq //    [a1 == a, b1 == b, c1 == c, a, b, c, a1, b1, c1]
+
+    add add 0x03 eq // [a1 == a && b1 == b && c1 == c, a, b, c, a1, b1, c1]
+
+    pass
+    jumpi
+
+    <msg> LOG_MSG()
+
+    `Expected:` LOG_MSG()
+    LOG_VAL() //       [b, c, a1, b1, c1]
+    LOG_VAL() //       [c, a1, b1, c1]
+    LOG_VAL() //       [a1, b1, c1]
+
+    `Got:` LOG_MSG()
+    LOG_VAL() //       [b1, c1]
+    LOG_VAL() //       [c1]
+    LOG_VAL() //       []
+
+    `Stack mismatch` 0xe false REQUIRE()
+    pass:
+      pop pop pop
+      pop pop pop //  []
+}
+
+#define macro _EXPECT_STACK4(msg) = takes (8) {
+        // takes:           [a, b, c, d, a1, b1, c1, d1]
+        dup8 dup5 eq     // [d1 == d, a, b, c, d, a1, b1, c1, d1]
+        dup8 dup5 eq     // [c1 == c, d1 == d, a, b, c, d, a1, b1, c1, d1]
+        dup8 dup5 eq     // [b1 == b, c1 == c, d1 == d, a, b, c, d, a1, b1, c1, d1]
+        dup8 dup5 eq     // [a1 == a, b1 == b, c1 == c, d1 == d, a, b, c, d, a1, b1, c1, d1]
+
+        add add add 0x04 eq // [a1 == a && b1 == b && c1 == c && d1 == d, a, b, c, d, a1, b1, c1, d1]
+
+        pass
+        jumpi
+
+        <msg> LOG_MSG()
+
+        `Expected:` LOG_MSG()
+        LOG_VAL()        // [b, c, d, a1, b1, c1, d1]
+        LOG_VAL()        // [c, d, a1, b1, c1, d1]
+        LOG_VAL()        // [d, a1, b1, c1, d1]
+        LOG_VAL()        // [a1, b1, c1, d1]
+
+        `Got:` LOG_MSG()
+        LOG_VAL()        // [b1, c1, d1]
+        LOG_VAL()        // [c1, d1]
+        LOG_VAL()        // [d1]
+        LOG_VAL()        // []
+
+        `Stack mismatch` 0xe false REQUIRE()
+        pass:
+            pop pop pop pop
+            pop pop pop pop // []
+}
+
+#define macro _EXPECT_STACK5(msg) = takes (10) {
+        // takes:          [a, b, c, d, e, a1, b1, c1, d1, e1]
+        dup10 dup6 eq     // [e1 == e, a, b, c, d, e, a1, b1, c1, d1, e1]
+        dup10 dup6 eq     // [d1 == d, e1 == e, a, b, c, d, e, a1, b1, c1, d1, e1]
+        dup10 dup6 eq     // [c1 == c, d1 == d, e1 == e, a, b, c, d, e, a1, b1, c1, d1, e1]
+        dup10 dup6 eq     // [b1 == b, c1 == c, d1 == d, e1 == e, a, b, c, d, e, a1, b1, c1, d1, e1]
+        dup10 dup6 eq     // [a1 == a, b1 == b, c1 == c, d1 == d, e1 == e, a, b, c, d, e, a1, b1, c1, d1, e1]
+
+        add add add add 0x05 eq // [a1 == a && b1 == b && c1 == c && d1 == d && e1 == e, a, b, c, d, e, a1, b1, c1, d1, e1]
+
+        pass
+        jumpi
+
+        <msg> LOG_MSG()
+
+        `Expected:` LOG_MSG()
+        LOG_VAL()        // [b, c, d, e, a1, b1, c1, d1, e1]
+        LOG_VAL()        // [c, d, e, a1, b1, c1, d1, e1]
+        LOG_VAL()        // [d, e, a1, b1, c1, d1, e1]
+        LOG_VAL()        // [e, a1, b1, c1, d1, e1]
+        LOG_VAL()        // [a1, b1, c1, d1, e1]
+
+        `Got:` LOG_MSG()
+        LOG_VAL()        // [b1, c1, d1, e1]
+        LOG_VAL()        // [c1, d1, e1]
+        LOG_VAL()        // [d1, e1]
+        LOG_VAL()        // [e1]
+        LOG_VAL()        // []
+
+        `Stack mismatch` 0xe false REQUIRE()
+        pass:
+            pop pop pop pop pop
+            pop pop pop pop pop // []
+}
+
+#define macro _EXPECT_STACK6(msg) = takes (12) {
+    // takes:          [a, b, c, d, e, f, a1, b1, c1, d1, e1, f1]
+    //                 ...you get the idea :)
+    dup12 dup7 eq
+    dup12 dup7 eq
+    dup12 dup7 eq
+    dup12 dup7 eq
+    dup12 dup7 eq
+    dup12 dup7 eq
+
+    add add add add add 0x06 eq
+
+    pass
+    jumpi
+
+    <msg> LOG_MSG()
+
+    `Expected:` LOG_MSG()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+
+    `Got:` LOG_MSG()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+
+    `Stack mismatch` 0xe false REQUIRE()
+    pass:
+      pop pop pop pop pop pop
+      pop pop pop pop pop pop
+}
+
+#define macro _EXPECT_STACK7(msg) = takes (14) {
+    // takes:          [a, b, c, d, e, f, g, a1, b1, c1, d1, e1, f1, g1]
+    //                 ...you get the idea :)
+    dup14 dup8 eq
+    dup14 dup8 eq
+    dup14 dup8 eq
+    dup14 dup8 eq
+    dup14 dup8 eq
+    dup14 dup8 eq
+    dup14 dup8 eq
+
+    add add add add add add 0x07 eq
+
+    pass
+    jumpi
+
+    <msg> LOG_MSG()
+
+    `Expected:` LOG_MSG()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+
+    `Got:` LOG_MSG()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+
+    `Stack mismatch` 0xe false REQUIRE()
+    pass:
+      pop pop pop pop pop pop pop
+      pop pop pop pop pop pop pop
+}
+
+#define macro _EXPECT_STACK8(msg) = takes (8) {
+    // takes:          [a, b, c, d, e, f, g, h, a1, b1, c1, d1, e1, f1, g1, h1]
+    //                 ...you get the idea :)
+    dup16 dup9 eq
+    dup16 dup9 eq
+    dup16 dup9 eq
+    dup16 dup9 eq
+    dup16 dup9 eq
+    dup16 dup9 eq
+    dup16 dup9 eq
+    dup16 dup9 eq
+
+    add add add add add add add 0x08 eq
+
+    pass
+    jumpi
+
+    <msg> LOG_MSG()
+
+    `Expected:` LOG_MSG()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+
+    `Got:` LOG_MSG()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+    LOG_VAL()
+
+    `Stack mismatch` 0xe false REQUIRE()
+    pass:
+      pop pop pop pop pop pop pop pop
+      pop pop pop pop pop pop pop pop
+}
+
+#define macro EXPECT_STACK(depth, msg) = {
+    <depth> 0x3 eq three jumpi
+    <depth> 0x4 eq four  jumpi
+    <depth> 0x5 eq five  jumpi
+    <depth> 0x6 eq six   jumpi
+    <depth> 0x7 eq seven jumpi
+    <depth> 0x8 eq eight jumpi
+
+    `Invalid stack length` 0x14 false REQUIRE()
+
+    three:
+      _EXPECT_STACK3(<msg>)
+      0x00 0x00 return
+    four:
+      _EXPECT_STACK4(<msg>)
+      0x00 0x00 return
+    five:
+      _EXPECT_STACK5(<msg>)
+      0x00 0x00 return
+    six:
+      _EXPECT_STACK6(<msg>)
+      0x00 0x00 return
+    seven:
+      _EXPECT_STACK7(<msg>)
+      0x00 0x00 return
+    eight:
+      _EXPECT_STACK8(<msg>)
+      0x00 0x00 return
+}
+
+#define macro EXPECT_EQ(msg) = takes (2) {
+    // takes: [a, b]
+    _EXPECT_EQ(`a == b not satisfied [stack]`, 0x1c, <msg>)
+}
+
+#define macro EXPECT_NOT_EQ(msg) = takes (2) {
+    // takes: [a, b]
+    _EXPECT_NOT_EQ(`a != b not satisfied [stack]`, 0x1c, <msg>)
+}
+
+#define macro EXPECT_GT(msg) = takes (2) {
+    // takes: [a, b]
+    dup2 //   [b, a, b]
+    dup2 //   [a, b, a, b]
+    gt   //   [a > b, a, b]
+    _EXPECT_BINARY(`a > b not satisfied [stack]`, 0x1c, <msg>)
+}
+
+#define macro EXPECT_GTE(msg) = takes (2) {
+    // takes: [a, b]
+    dup2 //   [b, a, b]
+    dup2 //   [a, b, a, b]
+    gt   //   [a > b, a, b]
+
+    dup3 //   [b, a > b, b, a]
+    dup3 //   [a, b, a > b, b, a]
+    eq   //   [a == b, a > b, b, a]
+
+    or   //   [a > b || a == b, b, a]
+    _EXPECT_BINARY(`a >= b not satisfied [stack]`, 0x1d, <msg>)
+}
+
+#define macro EXPECT_LT(msg) = takes (2) {
+    // takes: [a, b]
+    dup2 //   [b, a, b]
+    dup2 //   [a, b, a, b]
+    lt   //   [a < b, a, b]
+    _EXPECT_BINARY(`a < b not satisfied [stack]`, 0x1c, <msg>)
+}
+
+#define macro EXPECT_LTE(msg) = takes (2) {
+    // takes: [a, b]
+    dup2 //   [b, a, b]
+    dup2 //   [a, b, a, b]
+    lt   //   [a < b, a, b]
+
+    dup3 //   [b, a < b, b, a]
+    dup3 //   [a, b, a < b, b, a]
+    eq   //   [a == b, a < b, b, a]
+
+    or   //   [a < b || a == b, b, a]
+    _EXPECT_BINARY(`a <= b not satisfied [stack]`, 0x1d, <msg>)
+}
+
+#define macro EXPECT_MEM_EQ(ptr_a, ptr_b, msg) = {
+    <ptr_b> mload
+    <ptr_a> mload
+    _EXPECT_EQ(`a == b not satisfied [memory]`, 0x1d, <msg>)
+}
+
+#define macro EXPECT_MEM_NOT_EQ(ptr_a, ptr_b, msg) = {
+    <ptr_b> mload
+    <ptr_a> mload
+    _EXPECT_NOT_EQ(`a != b not satisfied [memory]`, 0x1d, <msg>)
+}
+
+#define macro EXPECT_STORAGE_EQ(slot_a, slot_b, msg) = {
+    <slot_b> sload
+    <slot_a> sload
+    _EXPECT_EQ(`a == b not satisfied [storage]`, 0x1e, <msg>)
+}
+
+#define macro EXPECT_STORAGE_NOT_EQ(slot_a, slot_b, msg) = {
+    <slot_b> sload
+    <slot_a> sload
+    _EXPECT_NOT_EQ(`a != b not satisfied [storage]`, 0x1e, <msg>)
+}
