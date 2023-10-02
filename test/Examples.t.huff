@@ -1,14 +1,26 @@
 #include "../src/HuffTest.huff"
 
-#define test TEST_STACK_EQUALITY() = {
-    `Banana`
-    `Banana`
+#define test TEST_STACK_EQUALITY_EMOJI() = {
+    `🐎💖✨`
+    `🐎💖✨`
     EXPECT_EQ(`Values should match`)
+}
+
+#define test TEST_BACKTICK_EQUALITY() = {
+    `I'm eth newbie..just learning`
+    0x49276d20657468206e65776269652e2e6a757374206c6561726e696e67000000
+    EXPECT_EQ(`Just another hex literal`)
 }
 
 #define test TEST_STACK_EQUALITY_FAIL() = {
     `Apple`
     `Banana`
+    EXPECT_EQ(`Values should match`)
+}
+
+#define test TEST_EQUALITY() = {
+    0x1
+    0x2
     EXPECT_EQ(`Values should match`)
 }
 

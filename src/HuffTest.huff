@@ -241,7 +241,7 @@
       pop pop pop pop pop pop pop
 }
 
-#define macro _EXPECT_STACK8(msg) = takes (8) {
+#define macro _EXPECT_STACK8(msg) = takes (16) {
     // takes:          [a, b, c, d, e, f, g, h, a1, b1, c1, d1, e1, f1, g1, h1]
     //                 ...you get the idea :)
     dup16 dup9 eq

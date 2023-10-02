@@ -12,3 +12,9 @@
     `Banana`
     ASSERT_EQ()
 }
+
+#define test TEST_EQUALITY() = {
+    0x1
+    0x2
+    ASSERT_EQ()
+}

@@ -7,3 +7,6 @@
 [submodule "lib/huffmate"]
 	path = lib/huffmate
 	url = https://github.com/huff-language/huffmate
+[submodule "lib/huff-rs"]
+	path = lib/huff-rs
+	url = https://github.com/horsefacts/huff-rs

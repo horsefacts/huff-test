@@ -20,3 +20,7 @@ flattened.txt
 
 # Ignore Broadcasts
 broadcast
+
+# Cargo
+/target/
+huffc
