@@ -1,0 +1,104 @@
+#include "../src/HuffTest.huff"
+
+// [FAIL]
+#define test TEST_EXPECT_EQ_FAIL() = {
+    0x01 0x00 EXPECT_EQ(`1 should equal 0`)
+}
+
+#define test TEST_EXPECT_NOT_EQ_FAIL() = {
+    0x00 0x00 EXPECT_NOT_EQ(`0 should not equal 0`)
+}
+
+#define test TEST_EXPECT_MEM_EQ_FAIL() = {
+    0x01 0x00 mstore
+    0x02 0x20 mstore
+    EXPECT_MEM_EQ(0x00, 0x20, `0x01 should equal 0x02`)
+}
+
+#define test TEST_EXPECT_MEM_NOT_EQ_FAIL() = {
+    0x01 0x00 mstore
+    0x01 0x20 mstore
+    EXPECT_MEM_NOT_EQ(0x00, 0x20, `0x01 should not equal 0x01`)
+}
+
+#define test TEST_EXPECT_STORAGE_EQ_FAIL() = {
+    0x01 0x00 sstore
+    0x02 0x01 sstore
+    EXPECT_STORAGE_EQ(0x00, 0x01, `0x01 should equal 0x02`)
+}
+
+#define test TEST_EXPECT_STORAGE_NOT_EQ_FAIL() = {
+    0x01 0x00 sstore
+    0x01 0x01 sstore
+    EXPECT_STORAGE_NOT_EQ(0x00, 0x01, `0x01 should not equal 0x01`)
+}
+
+#define test TEST_EXPECT_STACK_3_FAIL() = {
+    0x1 0x2 0x3
+    0x4 0x5 0x6
+    EXPECT_STACK(0x3, `Stack should be [6, 5, 4]`)
+}
+
+#define test TEST_EXPECT_STACK_4_FAIL() = {
+    0x1 0x2 0x3 0x4
+    0x5 0x6 0x7 0x8
+    EXPECT_STACK(0x4, `Stack should be [8, 7, 6, 5]`)
+}
+
+#define test TEST_EXPECT_STACK_5_FAIL() = {
+    0x1 0x2 0x3 0x4 0x5
+    0x6 0x7 0x8 0x9 0xa
+    EXPECT_STACK(0x5, `Stack: [a, 9, 8, 7, 6]`)
+}
+
+#define test TEST_EXPECT_STACK_6_FAIL() = {
+    0x1 0x2 0x3 0x4 0x5 0x6
+    0x7 0x8 0x9 0xa 0xb 0xc
+    EXPECT_STACK(0x6, `Stack: [c, b, a, 9, 8, 7]`)
+}
+
+#define test TEST_EXPECT_STACK_7_FAIL() = {
+    0x1 0x1 0x1 0x1 0x1 0x1 0x1
+    0x1 0x1 0x2 0x1 0x1 0x1 0x2
+    EXPECT_STACK(0x7, `Stack: [2, 1, 1, 1, 2, 1, 1]`)
+}
+
+#define test TEST_EXPECT_STACK_8_FAIL() = {
+    0x1 0x1 0x1 0x1 0x1 0x1 0x1 0x1
+    0x1 0x1 0x2 0x1 0x1 0x1 0x2 0x1
+    EXPECT_STACK(0x8, `[1, 2, 1, 1, 1, 2, 1, 1]`)
+}
+
+#define test TEST_EXPECT_GT_FAIL() = {
+    0x2 0x1 EXPECT_GT(`1 is greater than 2`)
+}
+
+#define test TEST_EXPECT_GT_FAIL_EQ() = {
+    0x1 0x1 EXPECT_GT(`1 is greater than 1`)
+}
+
+#define test TEST_EXPECT_GTE_FAIL() = {
+    0x2 0x1 EXPECT_GTE(`1 is greater than 2`)
+}
+
+#define test TEST_EXPECT_LT_FAIL() = {
+    0x1 0x2 EXPECT_LT(`2 is less than 1`)
+}
+
+#define test TEST_EXPECT_LT_FAIL_EQ() = {
+    0x1 0x1 EXPECT_LT(`1 is less than 1`)
+}
+
+#define test TEST_EXPECT_LTE_FAIL() = {
+    0x1 0x2 EXPECT_LTE(`2 is less than 1`)
+}
+
+#define test TEST_EQUALITY_FAIL() = {
+    `Banana` `Apple` EXPECT_EQ(`'Apple' should eq 'Banana'`)
+}
+
+#define test TEST_STACK_MISMATCH_FAIL() = {
+    0x1111 0x11111 0x1111 0x1111 0x11
+    0x1111 0x12345 0x1111 0x1234 0x12
+    EXPECT_STACK(0x5, `Stack did not match.`)
+}

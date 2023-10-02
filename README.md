@@ -1,5 +1,7 @@
 # huff-test
 
+![Build Status](https://github.com/horsefacts/huff-test/actions/workflows/.github/workflows/ci.yaml/badge.svg?branch=main)
+
 Better assertions for pure Huff tests.
 
 <img width="600" src="./img/stack.png">
